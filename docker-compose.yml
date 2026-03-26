@@ -1,46 +1,56 @@
 version: "3.9"
 
 services:
+
+  # ─── PostgreSQL Database ───────────────────────────────────────────────────
   db:
     image: postgres:15-alpine
     container_name: notes_db
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: notesdb
-      POSTGRES_USER: notesuser
-      POSTGRES_PASSWORD: notespassword
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U notesuser -d notesdb"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
 
+  # ─── Django Backend ────────────────────────────────────────────────────────
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: notes_backend
+    restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://notesuser:notespassword@db:5432/notesdb
-      DJANGO_SECRET_KEY: super-secret-key-change-in-production
-      DEBUG: "True"
-      ALLOWED_HOSTS: "*"
-    ports:
-      - "8000:8000"
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      DEBUG: ${DEBUG}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+      # AWS credentials (optional – only needed if using S3/SES/etc.)
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_STORAGE_BUCKET_NAME: ${AWS_STORAGE_BUCKET_NAME:-}
+      AWS_S3_REGION_NAME: ${AWS_S3_REGION_NAME:-}
+    expose:
+      - "8000"
     depends_on:
       db:
         condition: service_healthy
-    volumes:
-      - ./backend:/app
 
+  # ─── React Frontend (Vite build → Nginx) ──────────────────────────────────
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: notes_frontend
+    restart: unless-stopped
     ports:
       - "80:80"
     depends_on:
