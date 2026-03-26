@@ -16,9 +16,47 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            echo ">>> Checking for Docker..."
+            if ! command -v docker &> /dev/null; then
+              echo ">>> Installing Docker..."
+              curl -fsSL https://get.docker.com | sudo sh
+              sudo usermod -aG docker ubuntu
+            fi
+
+            if ! command -v docker-compose &> /dev/null; then
+              echo ">>> Installing Docker Compose..."
+              sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+            fi
+
+            echo ">>> Navigating to project directory"
+            mkdir -p ~/cloud-web-app
             cd ~/cloud-web-app
-            git reset --hard HEAD
-            git clean -fd
-            git pull origin main
+            
+            echo ">>> Pulling latest code"
+            if [ ! -d ".git" ]; then
+              git clone https://github.com/Asirindusamod99/cloud-web-app.git .
+            else
+              git reset --hard HEAD
+              git clean -fd
+              git pull origin main
+            fi
+
+            echo ">>> Writing .env file from GitHub Secrets"
+            cat > .env <<EOF
+            POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+            POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}
+            DEBUG=False
+            ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}
+            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_STORAGE_BUCKET_NAME=${{ secrets.AWS_STORAGE_BUCKET_NAME }}
+            AWS_S3_REGION_NAME=${{ secrets.AWS_S3_REGION_NAME }}
+            EOF
+
+            echo ">>> Rebuilding and restarting containers"
             sudo docker-compose down
             sudo docker-compose up --build -d
+            sudo docker system prune -f
