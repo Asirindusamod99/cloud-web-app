@@ -12,7 +12,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_new:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
@@ -57,4 +57,4 @@ services:
       - backend
 
 volumes:
-  postgres_data:
+  postgres_data_new:
