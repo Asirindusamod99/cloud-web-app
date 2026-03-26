@@ -97,11 +97,11 @@ AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None
 AWS_S3_VERIFY = True
 
-# Only use S3 if AWS credentials are provided
-if AWS_ACCESS_KEY_ID and AWS_STORAGE_BUCKET_NAME:
-    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-    MEDIA_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/"
-else:
-    # Local fallback: store files on disk
+if DEBUG:
+    # Local fallback for local development video testing
     MEDIA_URL = "/media/"
     MEDIA_ROOT = BASE_DIR / "media"
+else:
+    # Force S3 in production to expose IAM / secret errors
+    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    MEDIA_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/"
