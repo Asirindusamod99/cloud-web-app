@@ -1,0 +1,87 @@
+"""
+Django settings for notes_project.
+"""
+import os
+import dj_database_url
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "insecure-dev-secret-key-replace-me")
+
+DEBUG = os.environ.get("DEBUG", "True") == "True"
+
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost").split(",")
+
+INSTALLED_APPS = [
+    "django.contrib.contenttypes",
+    "django.contrib.auth",
+    "django.contrib.staticfiles",
+    "rest_framework",
+    "corsheaders",
+    "notes",
+]
+
+MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
+
+ROOT_URLCONF = "notes_project.urls"
+
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = "notes_project.wsgi.application"
+
+DATABASE_URL = os.environ.get("DATABASE_URL", "")
+
+if DATABASE_URL:
+    # Docker / production: use PostgreSQL
+    DATABASES = {
+        "default": dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+    }
+else:
+    # Local dev fallback: SQLite (no Postgres install needed)
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
+
+LANGUAGE_CODE = "en-us"
+TIME_ZONE = "UTC"
+USE_I18N = True
+USE_TZ = True
+
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# CORS
+CORS_ALLOW_ALL_ORIGINS = True
+
+# DRF
+REST_FRAMEWORK = {
+    "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
+    "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
+    # No auth required – open CRUD for demo purposes
+    "DEFAULT_AUTHENTICATION_CLASSES": [],
+    "DEFAULT_PERMISSION_CLASSES": [],
+}
