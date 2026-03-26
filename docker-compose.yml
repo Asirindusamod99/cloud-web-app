@@ -41,16 +41,10 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: notes_frontend
-    environment:
-      VITE_API_BASE_URL: http://localhost:8000/api
-      VITE_BACKEND_HOST: backend
     ports:
-      - "5173:5173"
+      - "80:80"
     depends_on:
       - backend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
 
 volumes:
   postgres_data:
