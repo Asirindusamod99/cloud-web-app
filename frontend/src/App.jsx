@@ -16,16 +16,26 @@ function useToast() {
 function NoteForm({ initial, onSubmit, onCancel, loading }) {
   const [title, setTitle]       = useState(initial?.title || "");
   const [description, setDesc]  = useState(initial?.description || "");
+  const [attachment, setAttachment] = useState(null);
 
   useEffect(() => {
     setTitle(initial?.title || "");
     setDesc(initial?.description || "");
+    setAttachment(null);
   }, [initial]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!title.trim()) return;
-    onSubmit({ title: title.trim(), description: description.trim() });
+    
+    const formData = new FormData();
+    formData.append("title", title.trim());
+    formData.append("description", description.trim());
+    if (attachment) {
+      formData.append("attachment", attachment);
+    }
+    
+    onSubmit(formData);
   };
 
   return (
@@ -51,6 +61,17 @@ function NoteForm({ initial, onSubmit, onCancel, loading }) {
             onChange={(e) => setDesc(e.target.value)}
             placeholder="Add some details (optional)…"
           />
+        </div>
+        <div className="form-group">
+          <label htmlFor="note-attachment">File Attachment (optional)</label>
+          <input
+            id="note-attachment"
+            type="file"
+            onChange={(e) => setAttachment(e.target.files[0])}
+          />
+          {initial?.attachment_url && (
+            <small>Current file: <a href={initial.attachment_url} target="_blank" rel="noreferrer">View</a></small>
+          )}
         </div>
         <div className="form-actions">
           <button
@@ -85,6 +106,11 @@ function NoteCard({ note, onEdit, onDelete, isEditing }) {
       <div className="note-title">{note.title}</div>
       {note.description && (
         <div className="note-description">{note.description}</div>
+      )}
+      {note.attachment_url && (
+        <div className="note-attachment">
+          📎 <a href={note.attachment_url} target="_blank" rel="noreferrer">View Attachment</a>
+        </div>
       )}
       <div className="note-actions">
         <button

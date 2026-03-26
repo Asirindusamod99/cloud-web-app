@@ -9,7 +9,11 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-export const getNotes    = ()         => api.get("/notes/");
-export const createNote  = (data)     => api.post("/notes/", data);
-export const updateNote  = (id, data) => api.put(`/notes/${id}/`, data);
-export const deleteNote  = (id)       => api.delete(`/notes/${id}/`);
+export const getNotes = () => api.get("/notes/");
+export const createNote = (data) => api.post("/notes/", data, {
+  headers: { "Content-Type": "multipart/form-data" }
+});
+export const updateNote = (id, data) => api.put(`/notes/${id}/`, data, {
+  headers: { "Content-Type": "multipart/form-data" }
+});
+export const deleteNote = (id) => api.delete(`/notes/${id}/`);
